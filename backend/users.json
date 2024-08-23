@@ -1,0 +1,33 @@
+[
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "telephone": "123-456-7890",
+      "role": "admin",
+      "membershipType": null
+    },
+    {
+      "id": 2,
+      "username": "customer1",
+      "password": "password1",
+      "name": "John Doe",
+      "email": "johndoe@example.com",
+      "telephone": "098-765-4321",
+      "role": "customer",
+      "membershipType": "Premium"
+    },
+    {
+      "id": 3,
+      "username": "customer2",
+      "password": "password2",
+      "name": "Jane Smith",
+      "email": "janesmith@example.com",
+      "telephone": "111-222-3333",
+      "role": "customer",
+      "membershipType": "Basic"
+    }
+  ]
+  

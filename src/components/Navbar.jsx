@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import logo from '../assets/images/books-shelf.png';
+import { FaUserCircle } from 'react-icons/fa'; // Using react-icons for the account icon
+import logo from '../assets/images/books-shelf.png'; // Import the logo image correctly
 
 const Navbar = () => {
   return (
@@ -29,6 +30,11 @@ const Navbar = () => {
               </li>
               <li className="nav-item">
                 <Link className="nav-link text-white fw-bold" to="/membership">Membership</Link>
+              </li>
+              <li className="nav-item">
+                <Link className="nav-link text-white fw-bold" to="/login">
+                  <FaUserCircle size={24} />
+                </Link>
               </li>
             </ul>
           </div>
