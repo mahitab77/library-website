@@ -1,45 +1,69 @@
 import { useState, useEffect } from 'react';
-import { getBooks, addBook, updateBook, deleteBook } from '../services/books.service'; // Import service functions
-import '../assets/css/admin-dashboard.css';
+import { getBooks, addBook, updateBook, deleteBook } from '../services/books.service';
 import AddBookForm from '../components/AddBookForm';
 
 const AdminDashboard = () => {
-  const [books, setBooks] = useState([]); // State to hold the list of books
+  const [books, setBooks] = useState([]); // State to hold the list of books for the session
   const [view, setView] = useState('grid'); // Controls the view (grid, create, or update)
   const [selectedBook, setSelectedBook] = useState(null); // Holds the book data being edited
+  const [message, setMessage] = useState(null); // State to handle messages
 
   useEffect(() => {
-    fetchBooks(); // Fetch books on component mount
+    fetchBooks();
   }, []);
 
-  // Function to fetch books from the backend
   const fetchBooks = async () => {
-    const fetchedBooks = await getBooks(); // Fetch books from the service
-    setBooks(fetchedBooks); // Update the state with the fetched books
-  };
-
-  // Function to handle deleting a book
-  const handleDeleteBook = async (bookId) => {
-    await deleteBook(bookId); // Call delete function from the service
-    fetchBooks(); // Refresh the book list after deletion
-  };
-
-  // Function to handle editing/updating a book
-  const handleEditBook = (book) => {
-    setSelectedBook(book); // Set the book data to be edited
-    setView('update'); // Switch the view to the update form
-  };
-
-  // Function to handle the book form submission (both add and update)
-  const handleBookSubmission = async (bookData) => {
-    if (view === 'create') {
-      await addBook(bookData); // Call add function if creating a new book
-    } else if (view === 'update') {
-      await updateBook(selectedBook.id, bookData); // Call update function if editing an existing book
+    try {
+      const initialBooks = await getBooks(); // Get books from the JSON file
+      setBooks(initialBooks); // Set the books in the state
+      console.log('Initial books fetched:', initialBooks); // Log the fetched books
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      setMessage({ type: 'error', text: 'Failed to fetch books. Please try again.' });
     }
-    fetchBooks(); // Refresh the book list after submission
-    setView('grid'); // Switch back to the grid view
-    setSelectedBook(null); // Clear the selected book after submission
+  };
+
+  
+  // Handle adding or updating a book
+  const handleBookSubmission = async (bookData) => {
+    try {
+      let updatedBooks;
+      if (view === 'create') {
+        updatedBooks = await addBook(bookData, books); // Pass current books array to addBook
+        setMessage({ type: 'success', text: 'Book added successfully.' });
+      } else if (view === 'update') {
+        updatedBooks = await updateBook(selectedBook.id, bookData, books); // Pass current books array to updateBook
+        setMessage({ type: 'success', text: 'Book updated successfully.' });
+      }
+      setBooks(updatedBooks); // Update the state with the new books array
+      console.log('Updated books array after submission:', updatedBooks); // Log the updated books array
+      setView('grid');
+      setSelectedBook(null);
+    } catch (error) {
+      console.error('Error during book submission:', error);
+      setMessage({ type: 'error', text: 'Operation failed. Please try again.' });
+    }
+  };
+
+  // Handle deleting a book
+  const handleDeleteBook = async (bookId) => {
+    try {
+      const confirmDelete = window.confirm('Are you sure you want to delete this book?');
+      if (confirmDelete) {
+        const updatedBooks = await deleteBook(bookId, books); // Pass current books array to deleteBook
+        setBooks(updatedBooks); // Update the state with the new books array
+        console.log('Updated books array after deletion:', updatedBooks); // Log the updated books array
+        setMessage({ type: 'success', text: 'Book deleted successfully.' });
+      }
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      setMessage({ type: 'error', text: 'Failed to delete the book. Please try again.' });
+    }
+  };
+
+  const handleEditBook = (book) => {
+    setSelectedBook(book);
+    setView('update');
   };
 
   return (
@@ -82,26 +106,75 @@ const AdminDashboard = () => {
                   </li>
                 </ul>
               </li>
+
+              {/* Events Section */}
+              <li className="nav-item">
+                <span className="nav-link text-white" style={{ cursor: 'pointer' }}>
+                  Events
+                </span>
+                <ul className="nav flex-column ms-3">
+                  <li className="nav-item">
+                    <span className="nav-link text-white" style={{ cursor: 'pointer' }}>
+                      Create Event
+                    </span>
+                  </li>
+                  <li className="nav-item">
+                    <span className="nav-link text-white" style={{ cursor: 'pointer' }}>
+                      View Events
+                    </span>
+                  </li>
+                </ul>
+              </li>
+
+              {/* Users Section */}
+              <li className="nav-item">
+                <span className="nav-link text-white" style={{ cursor: 'pointer' }}>
+                  Users
+                </span>
+                <ul className="nav flex-column ms-3">
+                  <li className="nav-item">
+                    <span className="nav-link text-white" style={{ cursor: 'pointer' }}>
+                      Create User
+                    </span>
+                  </li>
+                  <li className="nav-item">
+                    <span className="nav-link text-white" style={{ cursor: 'pointer' }}>
+                      View Users
+                    </span>
+                  </li>
+                </ul>
+              </li>
             </ul>
           </div>
         </nav>
 
         {/* Main Content */}
         <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4 mt-5">
+        <div className="mt-4"> 
+          {message && (
+            <div
+              className={`alert alert-${message.type === 'success' ? 'success' : 'danger'}`}
+              role="alert"
+            >
+              {message.text}
+            </div>
+          )}
+        </div>
+
           {view === 'grid' && (
             <>
-              <h2>Book Catalog</h2>
+              <h2 className="mt-2">Book Catalog</h2>
               <div className="row">
                 {books.length > 0 ? (
                   books.map((book) => (
-                    <div className="col-md-3 mb-4" key={book.id}>
+                    <div className="col-md-4 mb-4" key={book.id}>
                       <div className="card h-100">
                         {/* Fixed height for the cover image */}
                         <img
-                          src={book.coverImage}
+                          src={book.coverImage || '/books-covers/Book-Cover.png'} // Default cover if not provided
                           className="card-img-top"
                           alt={book.title}
-                          style={{ height: '65%', objectFit: 'cover' }}
+                          style={{ height: '65%', objectFit: 'center' }}
                         />
                         <div className="card-body d-flex flex-column">
                           <h5 className="card-title">{book.title}</h5>
@@ -135,7 +208,6 @@ const AdminDashboard = () => {
             </>
           )}
 
-          {/* Create and Update Form View */}
           {(view === 'create' || view === 'update') && (
             <div className="d-flex justify-content-start ms-5 mt-5">
               <div className="w-75 ms-5"> {/* Adjusted width and margin */}

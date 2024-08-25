@@ -1,86 +1,45 @@
 import axios from 'axios';
 
-// Define the path to your backend JSON file
-const backendUrl = '/backend/books.json';
+// Path to the books.json file
+const booksFilePath = '/backend/books.json';
 
-// Function to get all books
+// Function to get books (initial fetch from the JSON file)
 export const getBooks = async () => {
   try {
-    const response = await axios.get(backendUrl);
+    const response = await axios.get(booksFilePath);
+    console.log('Fetched books from JSON:', response.data.books);
     return response.data.books; // Assuming the JSON structure is { "books": [...] }
   } catch (error) {
     console.error('Error fetching books:', error);
-    return [];
+    return []; // Return an empty array in case of error
   }
 };
 
-// Function to get a book by ID
-export const getBookById = async (id) => {
-  try {
-    const response = await axios.get(backendUrl);
-    const books = response.data.books;
-    return books.find((book) => book.id === id);
-  } catch (error) {
-    console.error('Error fetching book by ID:', error);
-    return null;
-  }
+// Function to add a book
+export const addBook = async (newBook, currentBooks) => {
+// Determine the next ID based on the highest existing ID in the array
+  const maxId = currentBooks.reduce((max, book) => (book.id > max ? book.id : max), 0);
+  const newId = maxId + 1; // Increment the highest ID by 1
+
+  const updatedBooks = [...currentBooks, { ...newBook, id: newId }];
+  console.log('Book added successfully:', { ...newBook, id: newId });
+  
+  return updatedBooks;
 };
 
-// Function to add a new book
-export const addBook = async (newBook) => {
-  try {
-    const response = await axios.get(backendUrl);
-    const books = response.data.books;
 
-    // Generate a new ID for the book
-    const newId = books.length > 0 ? books[books.length - 1].id + 1 : 1;
-    const bookToAdd = { ...newBook, id: newId };
-    books.push(bookToAdd);
-
-    // Save the updated books list (this assumes you have an API to save updates)
-    await axios.post(backendUrl, { books });
-
-    return bookToAdd;
-  } catch (error) {
-    console.error('Error adding new book:', error);
-    return null;
-  }
-};
-
-// Function to update an existing book
-export const updateBook = async (id, updatedBook) => {
-  try {
-    const response = await axios.get(backendUrl);
-    let books = response.data.books;
-
-    books = books.map((book) =>
-      book.id === id ? { ...book, ...updatedBook } : book
-    );
-
-    // Save the updated books list
-    await axios.post(backendUrl, { books });
-
-    return getBookById(id);
-  } catch (error) {
-    console.error('Error updating book:', error);
-    return null;
-  }
+// Function to update a book
+export const updateBook = async (bookId, updatedData, currentBooks) => {
+  const updatedBooks = currentBooks.map((book) =>
+    book.id === bookId ? { ...book, ...updatedData } : book
+  );
+  console.log('Book updated successfully:', updatedData);
+  return updatedBooks;
 };
 
 // Function to delete a book
-export const deleteBook = async (id) => {
-  try {
-    const response = await axios.get(backendUrl);
-    let books = response.data.books;
-
-    books = books.filter((book) => book.id !== id);
-
-    // Save the updated books list
-    await axios.post(backendUrl, { books });
-
-    return books;
-  } catch (error) {
-    console.error('Error deleting book:', error);
-    return [];
-  }
+export const deleteBook = async (bookId, currentBooks) => {
+  const updatedBooks = currentBooks.filter((book) => book.id !== bookId);
+  console.log(`Book with ID ${bookId} deleted successfully.`);
+  return updatedBooks;
 };
